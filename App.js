@@ -14,6 +14,18 @@ const quotes = [{
   message: 'Make it simple. Make it memorable. Make it inviting to look at. Make it fun to read.',
   author: 'Gary Vaynerchuck',
   gradientBackground: ['#a18cd1', '#fbc2eb'],
+}, {
+  message: `Don't quit. Never give up trying to build the world you can see, even if others can't see it. Listen to your drum and your drum only. It's the one that makes the sweetest sound.`,
+  author: 'Simon Sinek',
+  gradientBackground: ['#fad0c4', '#fad0c4']
+}, {
+  message: 'If you have the opportunity to do amazing things in your life, I strongly encourage you to invite someone to join you.',
+  author: 'Simon Sinek',
+  gradientBackground: ['#ffecd2', '#fcb69f']
+}, {
+  message: `I hated every minute of training, but I said, 'Don't quit. Suffer now and live the rest of your life as a champion.'`,
+  author: 'Muhammad Ali',
+  gradientBackground: ['#ff9a9e', '#fecfef'],
 }];
 
 export default class App extends React.Component {
@@ -33,10 +45,13 @@ export default class App extends React.Component {
     });
   }
 
-  randomizeQuote = () => {
-    this.setState({
-      quoteIndex: Math.floor(Math.random() * 10) % quotes.length
-    });
+  nextQuote = () => {
+    const { quoteIndex } = this.state;
+    if (quoteIndex <= quotes.length - 2) {
+      this.setState({ quoteIndex: quoteIndex + 1 });
+    } else {
+      this.setState({ quoteIndex: 0 });
+    }
   }
 
   render() {
@@ -48,7 +63,7 @@ export default class App extends React.Component {
         <Text style={[styles.author, fontLoaded && { fontFamily: 'Average' }]}>{quotes[quoteIndex].author}</Text>
 
         <View style={styles.button}>
-          <Button title={'Regenerate quote'} onPress={this.randomizeQuote}/>
+          <Button title={'Next quote'} onPress={this.nextQuote}/>
         </View>
       </LinearGradient>
     );
