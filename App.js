@@ -1,81 +1,79 @@
 import React from 'react';
-import { StyleSheet, Text, View, FlatList, Dimensions, Modal, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo';
+import { StyleSheet, Text, View, FlatList, Dimensions, Platform } from 'react-native';
+import { LinearGradient, Constants } from 'expo';
 import { Ionicons } from '@expo/vector-icons';
 import sampleSize from 'lodash/sampleSize';
 import gradients from './gradients.json';
+import color from 'tinycolor2';
 
 const { width } = Dimensions.get('window');
 
 export default class App extends React.Component {
   state = {
     data: sampleSize(gradients, 10),
-    activeGradient: null,
-    isModalOpen: false,
+    refreshing: false
   }
 
   reload = () => {
     this.setState({
-      data: sampleSize(gradients, 10)
+      refreshing: true,
+    }, () => {
+      if (Platform.OS === 'android') {
+        this.update();
+      }
     });
   }
 
-  openGradient = (gradient) => {
-    this.setState({
-      activeGradient: gradient,
-      isModalOpen: true,
-    });
-  }
-
-  closeGradient = () => {
-    this.setState({
-      activeGradient: null,
-      isModalOpen: false,
-    });
+  update = () => {
+    if (this.state.refreshing) {
+      this.setState({
+        data: sampleSize(gradients, 10),
+        refreshing: false,
+      });
+    }
   }
 
   render() {
-    const { data, activeGradient, isModalOpen } = this.state;
+    const { data, activeGradient, isModalOpen, refreshing } = this.state;
 
     return (
       <View style={styles.container}>
-        <Modal
-          animationType={'slide'}
-          transparent={false}
-          visible={isModalOpen}
-        >
-          {activeGradient &&
-            <LinearGradient
-              style={styles.gradientBackground}
-              colors={activeGradient.colors}
-            >
-              <Text style={styles.title}>{activeGradient.name}</Text>
-              <Text>{activeGradient.colors.join('→')}</Text>
-
-              <TouchableOpacity onPress={() => this.closeGradient()}>
-                <Ionicons name="ios-close" size={80} color="black" style={styles.closeButton}/>
-              </TouchableOpacity>
-            </LinearGradient>
-          }
-        </Modal>
-        <Text style={styles.title}>WebGradients</Text>
-        <Text style={styles.description}>
-          These linear gradient colors are taken from webgradients.com
-        </Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>UI Gradients</Text>
+          <Text style={styles.description}>
+            Linear Gradients from webgradients.com
+          </Text>
+        </View>
         <FlatList
+          onStartShouldSetResponder={() => true}
+          onResponderRelease={this.update} // this only works on ios
           initialNumToRender={5}
           data={data}
           keyExtractor={(item, index) => index}
           renderItem={({ item, index }) => (
-            <TouchableOpacity onPress={() => this.openGradient(item)}>
-              <LinearGradient style={styles.listWrapper} colors={item.colors}>
-                <Text style={styles.gradientName}>{item.name}</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            <LinearGradient
+              style={styles.listWrapper}
+              colors={item.colors}
+              start={[0, 0.5]}
+              end={[1, 0.5]}
+            >
+              <Text
+                style={[
+                  styles.gradientName,
+                  { color: color(item.colors[0]).isLight() ? 'black' : 'white' }
+                ]
+              }>{item.name}</Text>
+              <View style={styles.colorsWrapper}>
+                <Text style={[styles.color, { color: color(item.colors[0]).isLight() ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)' }]}>{item.colors[0]}</Text>
+                <Text style={[styles.color, { color: color(item.colors[0]).isLight() ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)' }]}>{item.colors[1]}</Text>
+              </View>
+            </LinearGradient>
           )}
-          refreshing={false}
+          refreshing={refreshing}
           onRefresh={this.reload}
           ItemSeparatorComponent={() => <View style={styles.seperator}/>}
+          ListHeaderComponent={() => <View style={styles.seperator}/>}
+          ListFooterComponent={() => <View style={styles.seperator}/>}
         />
       </View>
     );
@@ -86,30 +84,56 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 30,
-    alignItems: 'center',
+    backgroundColor: '#241937',
   },
-  listWrapper: {
-    flex: 1,
-    height: width - 30 * 2,
-    width: width - 30 * 2,
-    marginHorizontal: 30,
-    borderRadius: (width - 30 * 2) / 2,
+  header: {
+    elevation: 20,
+    shadowColor: '#241937',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 1,
+    shadowRadius: 2,
+    zIndex: 1,
+    // width,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  listWrapper: {
+    flex: 1,
+    height: 80,
+    // width: width - 15 * 2,
+    marginHorizontal: 15,
+    paddingLeft: 20,
+    borderRadius: 15,
+    alignItems: 'center',
+    flexDirection: 'row'
+  },
+  color: {
+    backgroundColor: 'transparent',
+    marginRight: 15
+  },
+  colorsWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    flex: 1,
+    paddingRight: 15
+  },
   seperator: {
-    height: 60,
+    height: 10,
   },
   gradientName: {
     backgroundColor: 'transparent',
+    fontWeight: 'bold',
+    color: '#fbfcfd'
   },
   title: {
     fontSize: 40,
     backgroundColor: 'transparent',
+    color: '#fbfcfd',
   },
   description: {
-    marginBottom: 50,
+    marginBottom: 20,
     marginTop: 20,
+    color: '#fbfcfd',
   },
   gradientBackground: {
     flex: 1,
